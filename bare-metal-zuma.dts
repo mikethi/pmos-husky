@@ -1,0 +1,847 @@
+/dts-v1/;
+
+/ {
+	#address-cells = <0x02>;
+	#size-cells = <0x01>;
+	compatible = "google,zuma";
+	interrupt-parent = <&gic>;
+
+	// ARM v9 CPU cluster (Exynos 2400 - 9 cores: 4x Klein + 4x Makalu + 1x Makalu ELP)
+	cpus {
+		#address-cells = <0x02>;
+		#size-cells = <0x00>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x00>;
+			enable-method = "psci";
+		};
+
+		cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x100>;
+			enable-method = "psci";
+		};
+
+		cpu@200 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x200>;
+			enable-method = "psci";
+		};
+
+		cpu@300 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x300>;
+			enable-method = "psci";
+		};
+
+		cpu@400 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x400>;
+			enable-method = "psci";
+		};
+
+		cpu@500 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x500>;
+			enable-method = "psci";
+		};
+
+		cpu@600 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x600>;
+			enable-method = "psci";
+		};
+
+		cpu@700 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x700>;
+			enable-method = "psci";
+		};
+
+		cpu@800 {
+			device_type = "cpu";
+			compatible = "arm,armv9";
+			reg = <0x00 0x800>;
+			enable-method = "psci";
+		};
+	};
+
+	// PSCI - Power State Coordination Interface (ARM spec, bootloader provides)
+	psci {
+		compatible = "arm,psci-1.0";
+		method = "smc";
+	};
+
+	// GIC-v3 - Generic Interrupt Controller (ARM hardware, absolute requirement)
+	gic: interrupt-controller@10400000 {
+		compatible = "arm,gic-v3";
+		#interrupt-cells = <0x04>;
+		interrupt-controller;
+		reg = <0x00 0x10400000 0x10000 0x00 0x10440000 0x200000>;
+		interrupts = <0x01 0x09 0x04 0x00>;
+		// phandle must be 0x01 - MCT interrupt-map embeds this raw value
+		phandle = <0x01>;
+	};
+
+	// ARM Generic Timer (architecture mandated, always present)
+	timer {
+		compatible = "arm,armv8-timer";
+		interrupts = <0x01 0x0d 0x1ff08 0x00 0x01 0x0e 0x1ff08 0x00 0x01 0x0b 0x1ff08 0x00 0x01 0x0a 0x1ff08 0x00>;
+		clock-frequency = <0x1770000>;
+	};
+
+	// Samsung MCT (Multi-Core Timer) - SoC timer hardware
+	mct: mct@100D0000 {
+		compatible = "samsung,exynos-mct-v3";
+		reg = <0x00 0x100d0000 0x800>;
+		interrupt-controller;
+		#interrupt-cells = <0x01>;
+		interrupt-parent = <&mct_map>;
+		interrupts = <0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0a 0x0b>;
+		clocks = <&clock 0x01>, <&clock 0x4e4>;
+		clock-names = "fin_pll", "mct";
+
+		mct_map: mct-v3-map {
+			#interrupt-cells = <0x01>;
+			#address-cells = <0x00>;
+			#size-cells = <0x00>;
+			interrupt-map = <0x00 0x01 0x00 0x2f6 0x04 0x00 0x01 0x01 0x00 0x2f7 0x04 0x00 0x02 0x01 0x00 0x2f8 0x04 0x00 0x03 0x01 0x00 0x2f9 0x04 0x00 0x04 0x01 0x00 0x2fa 0x04 0x00 0x05 0x01 0x00 0x2fb 0x04 0x00 0x06 0x01 0x00 0x2fc 0x04 0x00 0x07 0x01 0x00 0x2fd 0x04 0x00 0x08 0x01 0x00 0x2fe 0x04 0x00>;
+		};
+	};
+
+	// Clock controller (CMU - Clock Management Unit, SoC hardware)
+	clock: clock-controller@26040000 {
+		compatible = "samsung,zuma-clock";
+		reg = <0x00 0x26040000 0x8000>;
+		#clock-cells = <0x01>;
+		acpm-ipc-channel = <0x00>;
+	};
+
+	// Fixed clocks (hardware oscillators on board)
+	ext_200m: ext_200m {
+		compatible = "fixed-clock";
+		#clock-cells = <0x00>;
+		clock-frequency = <0xbebc200>;
+		clock-output-names = "ext-200m";
+	};
+
+	ext_26m: ext_26m {
+		compatible = "fixed-clock";
+		#clock-cells = <0x00>;
+		clock-frequency = <0x18cba80>;
+		clock-output-names = "ext-26m";
+	};
+
+	ext_24_5m: ext_24_5m {
+		compatible = "fixed-clock";
+		#clock-cells = <0x00>;
+		clock-frequency = <0x1770000>;
+		clock-output-names = "ext-24_5m";
+	};
+
+	// ARM PMU (performance monitoring, same IP as GS101)
+	arm-pmu {
+		compatible = "arm,armv8-pmuv3";
+		interrupts = <0x01 0x07 0x1ff04 0x00>;
+	};
+
+	// PMU Syscon (same gs101-pmu compatible as GS101 — used by watchdog + reboot)
+	pmu_system_controller: system-controller@15460000 {
+		compatible = "samsung,gs101-pmu", "syscon";
+		reg = <0x00 0x15460000 0x10000>;
+	};
+
+	// HSI0 Power Domain (controls USB power gate - real hardware)
+	pd_hsi0: pd-hsi0@15462A80 {
+		compatible = "samsung,exynos-pd";
+		reg = <0x00 0x15462a80 0x20>;
+		cal_id = <0xb1380018>;
+		need_smc = <0x11010204>;
+		cmu_id = <0x11000000>;
+		status = "okay";
+		#power-domain-cells = <0x00>;
+		power-down-ok = <0x03>;
+		skip-idle-ip;
+	};
+
+	// HSI0 sysreg (USB system register block - hardware block)
+	sysreg_hsi0: sysreg_hsi0@11020000 {
+		compatible = "samsung,sysreg-hsi0", "syscon";
+		reg = <0x00 0x11020000 0x10000>;
+	};
+
+	reserved-memory {
+		#address-cells = <0x02>;
+		#size-cells = <0x01>;
+		ranges;
+
+		ect_binary {
+			compatible = "exynos,ect_rmem";
+			reg = <0x00 0x90000000 0x60000>;
+		};
+
+		ramoops_mem@fd3ff000 {
+			compatible = "ramoops";
+			reg = <0x00 0xfd3ff000 0x400000>;
+			console-size = <0x200000>;
+			pmsg-size = <0x200000>;
+		};
+	};
+
+	// Serial console
+	uart@10870000 {
+		compatible = "samsung,exynos-uart";
+		reg = <0x00 0x10870000 0x100>;
+		interrupts = <0x00 0x281 0x04 0x00>;
+		clocks = <&ext_200m>, <&ext_200m>;
+		clock-names = "gate_uart_clk0", "ipclk_uart0";
+		status = "okay";
+	};
+
+	// Pinctrl for GPIOs and essential peripherals
+	pinctrl@10840000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x10840000 0x1000>;
+		interrupts = <0x00 0x280 0x04 0x00>;
+
+		gpp0 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp1 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp2 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp3 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp4 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp5 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp6 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp7 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp8 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp9 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp10 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp11 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp12 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp13 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp14 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp15 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp16 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp17 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		uart0-bus {
+			samsung,pins = "gpp1-2", "gpp1-3";
+			samsung,pin-function = <0x02>;
+			samsung,pin-pud = <0x00>;
+		};
+	};
+
+	pinctrl@10C40000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x10c40000 0x1000>;
+		interrupts = <0x00 0x289 0x04 0x00>;
+
+		gpp19 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp20 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp21 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp22 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp23 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gpp24 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+	};
+
+	pinctrl@12040000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x12040000 0x1000>;
+		interrupts = <0x00 0x19d 0x04 0x00>;
+
+		gph0 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gph1 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gph2 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+	};
+
+	pinctrl@13040000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x13040000 0x1000>;
+		interrupts = <0x00 0x1b0 0x04 0x00>;
+
+		gph3 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		gph4 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+	};
+
+	pinctrl@13060000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x13060000 0x1000>;
+		interrupts = <0x00 0x1b1 0x04 0x00>;
+
+		gph5 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+		};
+
+		ufs-rst-n {
+			samsung,pins = "gph5-1";
+			samsung,pin-function = <0x02>;
+			samsung,pin-pud = <0x00>;
+			samsung,pin-con-pdn = <0x03>;
+			samsung,pin-pud-pdn = <0x00>;
+		};
+
+		ufs-refclk-out {
+			samsung,pins = "gph5-0";
+			samsung,pin-function = <0x02>;
+			samsung,pin-pud = <0x00>;
+			samsung,pin-con-pdn = <0x03>;
+			samsung,pin-pud-pdn = <0x00>;
+			samsung,pin-drv = <0x02>;
+		};
+	};
+
+	pinctrl@15060000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x15060000 0x1000>;
+		interrupts = <0x00 0x00 0x04 0x00 0x00 0x01 0x04 0x00 0x00 0x02 0x04 0x00 0x00 0x03 0x04 0x00 0x00 0x04 0x04 0x00 0x00 0x05 0x04 0x00 0x00 0x06 0x04 0x00 0x00 0x07 0x04 0x00 0x00 0x08 0x04 0x00 0x00 0x09 0x04 0x00>;
+
+		gpn0 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x00 0x04 0x00>;
+		};
+
+		gpn1 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x01 0x04 0x00>;
+		};
+
+		gpn2 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x02 0x04 0x00>;
+		};
+
+		gpn3 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x03 0x04 0x00>;
+		};
+
+		gpn4 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x04 0x04 0x00>;
+		};
+
+		gpn5 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x05 0x04 0x00>;
+		};
+
+		gpn6 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x06 0x04 0x00>;
+		};
+
+		gpn7 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x07 0x04 0x00>;
+		};
+
+		gpn8 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x08 0x04 0x00>;
+		};
+
+		gpn9 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x09 0x04 0x00>;
+		};
+
+		wakeup-interrupt-controller {
+			compatible = "samsung,exynos7-wakeup-eint";
+		};
+	};
+
+	pinctrl@154D0000 {
+		compatible = "google,zuma-pinctrl";
+		reg = <0x00 0x154d0000 0x1000>;
+		interrupts = <0x00 0x0a 0x04 0x00 0x00 0x0b 0x04 0x00 0x00 0x0c 0x04 0x00 0x00 0x0d 0x04 0x00 0x00 0x0e 0x04 0x00 0x00 0x0f 0x04 0x00 0x00 0x10 0x04 0x00 0x00 0x11 0x04 0x00 0x00 0x12 0x04 0x00 0x00 0x13 0x04 0x00 0x00 0x14 0x04 0x00 0x00 0x15 0x04 0x00 0x00 0x16 0x04 0x00 0x00 0x17 0x04 0x00 0x00 0x18 0x04 0x00 0x00 0x19 0x04 0x00 0x00 0x1a 0x04 0x00 0x00 0x1b 0x04 0x00 0x00 0x1c 0x04 0x00 0x00 0x1e 0x04 0x00 0x00 0x1f 0x04 0x00 0x00 0x20 0x04 0x00 0x00 0x21 0x04 0x00 0x00 0x22 0x04 0x00 0x00 0x23 0x04 0x00 0x00 0x24 0x04 0x00 0x00 0x25 0x04 0x00 0x00 0x26 0x04 0x00 0x00 0x27 0x04 0x00 0x00 0x28 0x04 0x00 0x00 0x29 0x04 0x00 0x00 0x2a 0x04 0x00 0x00 0x2b 0x04 0x00 0x00 0x2c 0x04 0x00 0x00 0x2d 0x04 0x00 0x00 0x2e 0x04 0x00 0x00 0x2f 0x04 0x00 0x00 0x30 0x04 0x00 0x00 0x31 0x04 0x00 0x00 0x32 0x04 0x00 0x00 0x33 0x04 0x00 0x00 0x34 0x04 0x00 0x00 0x35 0x04 0x00 0x00 0x36 0x04 0x00 0x00 0x37 0x04 0x00 0x00 0x38 0x04 0x00 0x00 0x39 0x04 0x00 0x00 0x3a 0x04 0x00 0x00 0x3b 0x04 0x00>;
+
+		gpa0 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x0a 0x04 0x00 0x00 0x0b 0x04 0x00 0x00 0x0c 0x04 0x00 0x00 0x0d 0x04 0x00>;
+		};
+
+		gpa1 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x0e 0x04 0x00 0x00 0x0f 0x04 0x00 0x00 0x10 0x04 0x00 0x00 0x11 0x04 0x00 0x00 0x12 0x04 0x00 0x00 0x13 0x04 0x00>;
+		};
+
+		gpa2 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x14 0x04 0x00 0x00 0x15 0x04 0x00 0x00 0x16 0x04 0x00 0x00 0x17 0x04 0x00>;
+		};
+
+		gpa3 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x18 0x04 0x00 0x00 0x19 0x04 0x00 0x00 0x1a 0x04 0x00 0x00 0x1b 0x04 0x00>;
+		};
+
+		gpa4 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x1c 0x04 0x00 0x00 0x1d 0x04 0x00>;
+		};
+
+		gpa6 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x1e 0x04 0x00 0x00 0x1f 0x04 0x00 0x00 0x20 0x04 0x00 0x00 0x21 0x04 0x00 0x00 0x22 0x04 0x00 0x00 0x23 0x04 0x00>;
+		};
+
+		gpa7 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x24 0x04 0x00 0x00 0x25 0x04 0x00 0x00 0x26 0x04 0x00 0x00 0x27 0x04 0x00 0x00 0x28 0x04 0x00 0x00 0x29 0x04 0x00 0x00 0x2a 0x04 0x00 0x00 0x2b 0x04 0x00>;
+		};
+
+		gpa8 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x2c 0x04 0x00 0x00 0x2d 0x04 0x00 0x00 0x2e 0x04 0x00 0x00 0x2f 0x04 0x00>;
+		};
+
+		gpa9 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x30 0x04 0x00 0x00 0x31 0x04 0x00 0x00 0x32 0x04 0x00 0x00 0x33 0x04 0x00 0x00 0x34 0x04 0x00 0x00 0x35 0x04 0x00 0x00 0x36 0x04 0x00>;
+		};
+
+		gpa10 {
+			gpio-controller;
+			#gpio-cells = <0x02>;
+			interrupt-controller;
+			#interrupt-cells = <0x03>;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x37 0x04 0x00 0x00 0x38 0x04 0x00 0x00 0x39 0x04 0x00 0x00 0x3a 0x04 0x00 0x00 0x3b 0x04 0x00>;
+		};
+
+		wakeup-interrupt-controller {
+			compatible = "samsung,exynos7-wakeup-eint";
+		};
+	};
+
+	// USB controller and phy
+	usbdrd_phy: phy@11100000 {
+		compatible = "samsung,exynos-usbdrd-phy";
+		reg = <0x00 0x11100000 0x200 0x00 0x11110000 0x200 0x00 0x11120000 0x200 0x00 0x11130000 0x800 0x00 0x11140000 0x800 0x00 0x11210000 0x10000>;
+		interrupts = <0x00 0x18f 0x04 0x00 0x00 0x18d 0x04 0x00 0x00 0x194 0x04 0x00>;
+		clocks = <&clock 0x227>, <&clock 0x22f>;
+		clock-names = "phy_ref", "aclk";
+		phy_version = <0x600>;
+		phy_eusb_version = <0x700>;
+		phyclk_mux = "none";
+		phy_refclk = "phy_ref";
+		phy_ref_clock = <0x124f800>;
+		has_other_phy = <0x00>;
+		has_combo_phy = <0x01>;
+		sub_phy_version = <0x801>;
+		usbdp_mode = <0x01>;
+		ip_type = <0x00>;
+		phy_refsel_clockcore = <0x01>;
+		phy_refsel_ext_osc = <0x00>;
+		phy_refsel_xtal = <0x00>;
+		phy_refsel_diff_pad = <0x00>;
+		phy_refsel_diff_internal = <0x00>;
+		phy_refsel_diff_single = <0x00>;
+		use_io_for_ovc = <0x00>;
+		common_block_disable = <0x01>;
+		is_not_vbus_pad = <0x01>;
+		used_phy_port = <0x00>;
+		status = "okay";
+		#phy-cells = <0x01>;
+		ranges;
+	};
+
+	usb@11210000 {
+		compatible = "samsung,exynos9-dwusb";
+		clocks = <&clock 0x22f>, <&clock 0x227>, <&clock 0x43>;
+		clock-names = "aclk", "sclk", "bus";
+		reg = <0x00 0x11210000 0x10000>;
+		#address-cells = <0x02>;
+		#size-cells = <0x01>;
+		ranges;
+		status = "okay";
+		interrupts = <0x00 0x192 0x04 0x00>;
+		tx-fifo-resize = <0x00>;
+		adj-sof-accuracy = <0x01>;
+		is_not_vbus_pad = <0x01>;
+		usb_host_device_timeout = <0xc8>;
+		enable_sprs_transfer = <0x01>;
+		samsung,no-extra-delay;
+		xhci_l2_support = <0x01>;
+		phys = <&usbdrd_phy 0x00 &usbdrd_phy 0x01>;
+		phy-names = "usb2-phy", "usb3-phy";
+		suspend_clk_freq = <0x124f800>;
+
+		dwc3 {
+			compatible = "synopsys,dwc3";
+			reg = <0x00 0x11210000 0x10000>;
+			interrupts = <0x00 0x192 0x04 0x00>;
+			dr_mode = "peripheral";
+			phys = <&usbdrd_phy 0x00 &usbdrd_phy 0x01>;
+			phy-names = "usb2-phy", "usb3-phy";
+			maximum-speed = "super-speed-plus";
+			snps,quirk-frame-length-adjustment = <0x20>;
+			snps,has-lpm-erratum;
+			snps,lpm-nyet-threshold = <0x00>;
+			snps,usb2-gadget-lpm-disable;
+			snps,dis-u2-freeclk-exists-quirk;
+			snps,dis-u1-entry-quirk;
+			snps,dis-u2-entry-quirk;
+			xhci_l2_support = <0x01>;
+		};
+	};
+
+	// UFS storage
+	ufs_sysreg: sysreg_ufs@13020000 {
+		compatible = "google,zuma-sysreg-ufs", "syscon";
+		reg = <0x00 0x13020000 0x1000>;
+	};
+
+	ufs@13200000 {
+		compatible = "samsung,exynos-ufs";
+		#address-cells = <0x02>;
+		#size-cells = <0x01>;
+		ranges;
+		reg = <0x00 0x13200000 0x200 0x00 0x13201100 0x2000 0x00 0x13280000 0x8000 0x00 0x132a0000 0xa014 0x00 0x13204000 0x4000 0x00 0x13208000 0x804>;
+		interrupts = <0x00 0x1d2 0x04 0x00>;
+		clocks = <&clock 0x299>, <&clock 0x29c>;
+		clock-names = "GATE_UFS_EMBD", "UFS_EMBD";
+		brd-for-cal = [01];
+		freq-table-hz = <0x00 0x00 0x00 0x00>;
+		ufs,pmd-attr-lane = [02];
+		ufs,pmd-attr-gear = [04];
+		dma-coherent;
+		fixed-prdt-req_list-ocs;
+
+		ufs-phy-iso {
+			offset = <0x3ec0>;
+			mask = <0x01>;
+			val = <0x01>;
+		};
+
+		ufs-iocc {
+			offset = <0x710>;
+			mask = <0x03>;
+			val = <0x03>;
+		};
+
+		ufs-pm-qos {
+			freq-int = <0x510e0>;
+		};
+	};
+
+	fixedregulator@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "ufs-vcc";
+		gpio = <0x28 0x01 0x00>;
+		enable-active-high;
+	};
+
+	// Physical RAM — Zuma base: 2GB at 0x80000000
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x00 0x80000000 0x80000000>;
+	};
+
+	// Boot console and kernel command line
+	chosen {
+		// earlycon matches UART @ 0x10870000, 115200 baud
+		bootargs = "earlycon=exynos4210,mmio32,0x10870000 console=ttySAC0,115200n8 root=/dev/mmcblk0p1 rw clocksource=arch_sys_counter";
+	};
+
+	// PMU interface — reboot/sleep control, backed by PMU syscon
+	exynos-pmu {
+		compatible = "samsung,exynos-pmu";
+		samsung,syscon-phandle = <&pmu_system_controller>;
+		reg = <0x00 0x15460000 0x10000>;
+		reg-names = "pmu_alive";
+	};
+
+	// ARM PL330 DMA engines — used by I2C/SPI/audio buses
+	amba {
+		#address-cells = <0x02>;
+		#size-cells = <0x01>;
+		compatible = "arm,amba-bus";
+		ranges;
+
+		pdma0: pdma0@10110000 {
+			compatible = "arm,pl330", "arm,primecell";
+			reg = <0x00 0x10110000 0x1000>;
+			interrupts = <0x00 0x328 0x04 0x00>;
+			clocks = <&ext_200m>;
+			clock-names = "apb_pclk";
+			#dma-cells = <0x01>;
+			#dma-channels = <0x08>;
+			#dma-requests = <0x20>;
+		};
+
+		pdma1: pdma1@10130000 {
+			compatible = "arm,pl330", "arm,primecell";
+			reg = <0x00 0x10130000 0x1000>;
+			interrupts = <0x00 0x326 0x04 0x00>;
+			clocks = <&ext_200m>;
+			clock-names = "apb_pclk";
+			#dma-cells = <0x01>;
+			#dma-channels = <0x08>;
+			#dma-requests = <0x20>;
+		};
+	};
+
+	// SoC chip ID (read-only, identifies silicon revision)
+	chipid@10000000 {
+		compatible = "google,zuma-chipid";
+		reg = <0x00 0x10000000 0xd000>;
+	};
+};
