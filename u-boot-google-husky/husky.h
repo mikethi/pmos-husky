@@ -20,6 +20,9 @@
 #define DTB_LOAD_ADDR            0x81000000
 #define INITRD_LOAD_ADDR         0x84000000
 
+#define __HUSKY_STR_VALUE(x)      #x
+#define __HUSKY_STR(x)            __HUSKY_STR_VALUE(x)
+
 /* Secure DRAM -- abl.bin: "secure dram base 0x%lx, size 0x%zx" */
 /* bl2 shows carve-outs up through 0x92800000 before usable DRAM */
 #define SECURE_DRAM_BASE         0x88800000      /* from bl2.bin aligned constants */
@@ -34,6 +37,6 @@
 
 /* Boot command */
 #define CONFIG_BOOTCOMMAND \
-    "abootimg addr 0x80080000; bootm 0x80080000"
+    "abootimg addr " __HUSKY_STR(KERNEL_LOAD_ADDR) "; bootm " __HUSKY_STR(KERNEL_LOAD_ADDR)
 
 #endif /* __HUSKY_H */
