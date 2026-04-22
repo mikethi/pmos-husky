@@ -1,0 +1,26 @@
+# Reference: <https://postmarketos.org/devicepkg>
+pkgname=u-boot-google-husky
+pkgdesc="U-Boot Husky board configuration"
+pkgver=1
+pkgrel=0
+url="https://postmarketos.org"
+license="GPL-2.0-only"
+arch="aarch64"
+options="!check !archcheck"
+
+source="
+husky.h
+"
+
+build() {
+return 0
+}
+
+package() {
+install -Dm644 "$srcdir/husky.h" \
+"$pkgdir/usr/share/u-boot-google-husky/include/configs/husky.h"
+}
+
+sha512sums="
+66c40cc9266f260c8ad587e118589a14f1545adc04e72b175260b19304c07b44b17e8a6c0dd7a86f5ef60e8999e3e9016709a25253dfca291c0a0e4f0dd445b4  husky.h
+"

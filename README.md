@@ -125,3 +125,11 @@ These files are downstream interpretation or scaffolding, not canonical hardware
 - `zuma-reserved-memory-keep-drop.md`
 - `zuma_first_stage_skeleton.c`
 - `zuma_first_stage.ld`
+
+## U-Boot integration scaffold for Husky
+
+This repository now ships a dedicated `u-boot-google-husky` package scaffold.
+
+- `uboothusky.cfg` remains the source board config artifact.
+- `u-boot-google-husky/husky.h` mirrors that artifact in U-Boot header form.
+- `device-google-husky/APKBUILD` now depends on `u-boot-google-husky` so the device package includes the Husky U-Boot config payload.
