@@ -1,0 +1,38 @@
+# Reference: <https://postmarketos.org/devicepkg>
+# U-Boot board config for Google Pixel 8 Pro (husky, Tensor G3 / Zuma SoC).
+# Ships the board header and defconfig so any user can drop them into an
+# upstream U-Boot tree and build.  See USAGE.md for quick-start instructions.
+pkgname=u-boot-google-husky
+pkgdesc="U-Boot board config and defconfig for Google Pixel 8 Pro (husky)"
+pkgver=1
+pkgrel=0
+url="https://github.com/u-boot/u-boot"
+license="GPL-2.0-only"
+arch="aarch64"
+options="!check !archcheck"
+
+source="
+	husky.h
+	husky_defconfig
+	USAGE.md
+"
+
+package() {
+	# Board header -- copy to include/configs/husky.h inside a U-Boot tree
+	install -Dm644 "$srcdir/husky.h" \
+		"$pkgdir/usr/share/u-boot-google-husky/include/configs/husky.h"
+
+	# Kconfig defconfig -- copy to configs/husky_defconfig inside a U-Boot tree
+	install -Dm644 "$srcdir/husky_defconfig" \
+		"$pkgdir/usr/share/u-boot-google-husky/configs/husky_defconfig"
+
+	# Usage instructions
+	install -Dm644 "$srcdir/USAGE.md" \
+		"$pkgdir/usr/share/u-boot-google-husky/USAGE.md"
+}
+
+sha512sums="
+e6505a5c8a58b3fe478c7cb2e25d8ae54eace11577980ef80e827fd7bf31ddf4355dfefa77b9275f6f436c9bf3a960e677754bb9587540e8417ce8537d2434ed  husky.h
+c56427f7b0576a4e80c43b5a264589be77e725a3caca9f2463ec11afb7b30ef359ca567c649435a9f68966d63e434304acff13f8cb8218f76757018958b7f28e  husky_defconfig
+0d7c392533d048c2fe2b654e8732ec881219e14067372f9cb6e84c402878b0dd97f649926f836bb4dfaa2972c9bc65f01fe943df7e88caeeac2efd0a33ca7bca  USAGE.md
+"

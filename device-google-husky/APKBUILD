@@ -11,6 +11,7 @@ depends="
 	mkbootimg
 	postmarketos-base
 	linux-google-husky
+	u-boot-google-husky
 "
 
 makedepends="devicepkg-dev"
