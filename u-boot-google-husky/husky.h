@@ -1,6 +1,13 @@
 #ifndef __HUSKY_H
 #define __HUSKY_H
 
+/*
+ * Source of truth: uboothusky.cfg in the pmos-husky repository.
+ * Copy this file to include/configs/husky.h in a U-Boot source tree.
+ * Copy configs/husky_defconfig to configs/husky_defconfig in that tree.
+ * See USAGE.md for full build instructions.
+ */
+
 /* DRAM -- confirmed: pbl.bin + bl31.bin both embed these */
 #define CONFIG_SYS_SDRAM_BASE    0x80000000UL   /* bank 0 base -- in pbl/bl2/bl31 */
 #define CONFIG_SYS_SDRAM_SIZE    0x200000000ULL /* 8 GB (husky) */
