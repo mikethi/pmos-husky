@@ -183,7 +183,7 @@ These files are downstream interpretation or scaffolding, not canonical hardware
 - `external-ota-digest.md`
 - `tensor-g1-g2-g3-comparison.md`
 - `husky-ground-up-rail-and-schema-map.md`
-- `u-boot-spl-vs-zuma-map.md`
+- `uboothusky.cfg`
 - `minimal-zuma-dt-cut-list.md`
 - `zuma-reserved-memory-keep-drop.md`
 - `zuma_first_stage_skeleton.c`
