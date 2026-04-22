@@ -12,10 +12,6 @@ source="
 husky.h
 "
 
-build() {
-true
-}
-
 package() {
 install -Dm644 "$srcdir/husky.h" \
 "$pkgdir/usr/share/u-boot-google-husky/include/configs/husky.h"
