@@ -42,7 +42,10 @@
 #define USB_VID                  0x18D1          /* Google */
 #define USB_PID_FASTBOOT         0x4EE7
 
-/* Boot command */
+/* Boot command
+ * We stringify KERNEL_LOAD_ADDR at compile time rather than using $loadaddr
+ * because $loadaddr may not be set in early U-Boot environments on this device.
+ */
 #define CONFIG_BOOTCOMMAND \
     "abootimg addr " __HUSKY_STR(KERNEL_LOAD_ADDR) "; bootm " __HUSKY_STR(KERNEL_LOAD_ADDR)
 

@@ -35,7 +35,7 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- all
 |--------|------|-------|
 | DRAM bank 0 | `0x80000000` | 8 GB, confirmed in pbl/bl31 |
 | DRAM bank 1 | `0x880000000` | Tensor G3 maps second bank at 34 GB |
-| Secure DRAM | `0x88800000` – `0x92200000` | ~154 MB TZ/BL31/GSA carve-out |
+| Secure DRAM | `0x88800000` -- `0x92200000` | ~154 MB TZ/BL31/GSA carve-out |
 | U-Boot text | `0x80200000` | Above carve-outs |
 | Kernel load | `0x80080000` | `text_offset` from Android boot format |
 | DTB load | `0x81000000` | |
